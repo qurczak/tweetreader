@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Find countries</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style>
+
+        #main {
+            width: 90%;
+            height: 90%;
+            text-align: center
+        }
+
+        #map {
+            width: 90%;
+            height: 80%;
+            margin: 0 auto;
+            display: inline-block;
+            position: relative;
+        }
+
+        #tweets {
+            width: 100%;
+            padding-bottom: 1em;
+        }
+
+        .tweet_line {
+            text-align: left;
+            padding-left: 2em;
+            font-size: 14px;
+            margin: 5px;
+        }
+
+        /* Optional: Makes the sample page fill the window. */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAZgKF-Vq86bevhlyO7Og-2LNuAf76y-us"></script>
+    <script>
+        $(document).ready(function () {
+            var map;
+            google.maps.event.addDomListener(window, 'load', initialize);
+
+            function initialize() {
+                var locations = [
+                    {% for location in locations %}
+                        ['{{ location.name }}', {{ location.lng}}, {{  location.lat  }}, {{ forloop.counter }}] {% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                ];
+
+                map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 2,
+                    center: new google.maps.LatLng(51, 22),
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                });
+
+                var infowindow = new google.maps.InfoWindow();
+                var marker, i;
+
+                for (i = 0; i < locations.length; i++) {
+                    marker = new google.maps.Marker({
+                        position: new google.maps.LatLng(locations[i][1], locations[i][2]),
+                        map: map
+                    });
+
+                    google.maps.event.addListener(marker, 'click', (function (marker, i) {
+                        return function () {
+                            infowindow.setContent(locations[i][0]);
+                            infowindow.open(map, marker);
+                        }
+                    })(marker, i));
+                }
+            }
+        });
+    </script>
+</head>
+<body>
+<div id="main">
+    <div id="tweets">
+        {% for tweet in user_tweets %}
+            <div class="tweet_line">{{ forloop.counter }}: {{ tweet }}</div>
+        {% endfor %}
+    </div>
+    {% if locations %}
+        <div class="tweet_line">Found: {{ locations }}</div>
+    {% endif %}
+    <div id="map"></div>
+</div>
+</body>
+</html>
